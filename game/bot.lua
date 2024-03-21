@@ -1,5 +1,5 @@
 -- Initializing global variables to store the latest game state and game host process.
-LatestGameState = LatestGameState or nil
+LatestGameState = LatestGameState or {}
 InAction = false -- Prevents the agent from taking multiple actions at once.
 BeingAttacked = false
 
@@ -86,15 +86,17 @@ local function decideNextAction()
 
     targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
 
-    if player.energy > 5 and targetInRange then
-        print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
-        ao.send({
-            Target = Game,
-            Action = "PlayerAttack",
-            Player = ao.id,
-            AttackEnergy = tostring(player.energy)
-        })
-    else
+    if targetInRange then
+        if player.energy > 5 then
+            print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
+            ao.send({
+                Target = Game,
+                Action = "PlayerAttack",
+                Player = ao.id,
+                AttackEnergy = tostring(player.energy)
+            })
+        end
+
         if player.energy <= 5 and BeingAttacked then
             print("Player has insufficient energy(" ..
                 player.energy .. "). Moving away from " .. nearestPlayer .. ". Direction: " .. awayDirection)
@@ -105,15 +107,15 @@ local function decideNextAction()
                 Direction = awayDirection
             })
             BeingAttacked = false
-        else
-            print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
-            ao.send({
-                Target = Game,
-                Action = "PlayerMove",
-                Player = ao.id,
-                Direction = towardsDirection
-            })
         end
+    else
+        print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
+        ao.send({
+            Target = Game,
+            Action = "PlayerMove",
+            Player = ao.id,
+            Direction = towardsDirection
+        })
     end
     InAction = false -- InAction logic added
 end
@@ -127,10 +129,7 @@ Handlers.add("PrintAnnouncements", Handlers.utils.hasMatchingTag("Action", "Anno
         })
     elseif (msg.Event == "Tick" or msg.Event == "Started-Game") and not InAction then
         InAction = true -- InAction logic added
-        ao.send({
-            Target = Game,
-            Action = "GetGameState"
-        })
+        ao.send({ Target = Game, Action = "GetGameState" })
     elseif InAction then -- InAction logic added
         print("[PrintAnnouncements]Previous action still in progress. Skipping.")
     end
