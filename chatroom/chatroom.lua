@@ -31,6 +31,29 @@ Handlers.add(
     end
 )
 
+-- Token gated chatroom
+-- Handlers.add(
+--     "Broadcast",
+--     Handlers.utils.hasMatchingTag("Action", "Broadcast"),
+--     function(m)
+--         if Balances[m.From] == nil or tonumber(Balances[m.From]) < 1 then
+--             print("UNAUTH REQ: " .. m.From)
+--             return
+--         end
+--         local type = m.Type or "Normal"
+--         print("Broadcasting message from " .. m.From .. ". Content: " .. m.Data)
+--         for i = 1, #Members, 1 do
+--             ao.send({
+--                 Target = Members[i],
+--                 Action = "Broadcasted",
+--                 Broadcaster = m.From,
+--                 Data = m.Data
+--             })
+--         end
+--     end
+-- )
+
+
 -- regist yourself to chatroom first
 -- Send({ Target = ao.id, Action = "Register" })
 
@@ -45,3 +68,6 @@ Handlers.add(
 -- create a token by blueprint, then transfer to Trinity
 -- .load-blueprint token
 -- Send({ Target = ao.id, Action = "Transfer", Recipient = Trinity, Quantity = "1000"})
+
+-- tell Trinity it is done
+-- Send({ Target = ao.id , Action = "Broadcast", Data = "It is done" })
