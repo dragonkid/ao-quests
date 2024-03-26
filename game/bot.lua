@@ -235,7 +235,8 @@ Handlers.add(
     end
 )
 
-Game = "0rVZYFxvfJpO__EfOz0_PUQ3GFE9kEaES0GkUDNXjvE"
+-- Game = "0rVZYFxvfJpO__EfOz0_PUQ3GFE9kEaES0GkUDNXjvE"
+Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
 
 Send({ Target = Game, Action = "Register" })
 -- Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
