@@ -1,12 +1,12 @@
 -- AO EFFECT: Game Mechanics for AO Arena Game
 
 -- Game grid dimensions
-Width = 40 -- Width of the grid
+Width = 40  -- Width of the grid
 Height = 40 -- Height of the grid
-Range = 1 -- The distance for blast effect
+Range = 1   -- The distance for blast effect
 
 -- Player energy settings
-MaxEnergy = 100 -- Maximum energy a player can have
+MaxEnergy = 100  -- Maximum energy a player can have
 EnergyPerSec = 1 -- Energy gained per second
 
 -- Attack settings
@@ -26,12 +26,12 @@ end
 -- Function to incrementally increase player's energy
 -- Called periodically to update player energy
 local function onTick()
-    if GameMode ~= "Playing" then return end  -- Only active during "Playing" state
+    if GameMode ~= "Playing" then return end -- Only active during "Playing" state
 
     if LastTick == undefined then LastTick = Now end
 
     local Elapsed = Now - LastTick
-    if Elapsed >= 1000 then  -- Actions performed every second
+    if Elapsed >= 1000 then -- Actions performed every second
         for player, state in pairs(Players) do
             local newEnergy = math.floor(math.min(MaxEnergy, state.energy + (Elapsed * EnergyPerSec // 2000)))
             state.energy = newEnergy
@@ -47,10 +47,14 @@ local function move(msg)
     local direction = msg.Tags.Direction
 
     local directionMap = {
-        Up = {x = 0, y = -1}, Down = {x = 0, y = 1},
-        Left = {x = -1, y = 0}, Right = {x = 1, y = 0},
-        UpRight = {x = 1, y = -1}, UpLeft = {x = -1, y = -1},
-        DownRight = {x = 1, y = 1}, DownLeft = {x = -1, y = 1}
+        Up = { x = 0, y = -1 },
+        Down = { x = 0, y = 1 },
+        Left = { x = -1, y = 0 },
+        Right = { x = 1, y = 0 },
+        UpRight = { x = 1, y = -1 },
+        UpLeft = { x = -1, y = -1 },
+        DownRight = { x = 1, y = 1 },
+        DownLeft = { x = -1, y = 1 }
     }
 
     -- calculate and update new coordinates
@@ -62,12 +66,13 @@ local function move(msg)
         Players[playerToMove].x = (newX - 1) % Width + 1
         Players[playerToMove].y = (newY - 1) % Height + 1
 
-        announce("Player-Moved", playerToMove .. " moved to " .. Players[playerToMove].x .. "," .. Players[playerToMove].y .. ".")
+        announce("Player-Moved",
+            playerToMove .. " moved to " .. Players[playerToMove].x .. "," .. Players[playerToMove].y .. ".")
     else
-        ao.send({Target = playerToMove, Action = "Move-Failed", Reason = "Invalid direction."})
+        ao.send({ Target = playerToMove, Action = "Move-Failed", Reason = "Invalid direction." })
     end
-    onTick()  -- Optional: Update energy each move
-    ao.send({Target = playerToMove, Action = "Tick"})
+    onTick() -- Optional: Update energy each move
+    ao.send({ Target = playerToMove, Action = "Tick" })
 end
 
 -- Handles player attacks
@@ -82,13 +87,13 @@ local function attack(msg)
 
     -- check if player has enough energy to attack
     if Players[player].energy < attackEnergy then
-        ao.send({Target = player, Action = "Attack-Failed", Reason = "Not enough energy."})
+        ao.send({ Target = player, Action = "Attack-Failed", Reason = "Not enough energy." })
         return
     end
 
     -- update player energy and calculate damage
     Players[player].energy = Players[player].energy - attackEnergy
-    local damage = math.floor((math.random() * 2 * attackEnergy) * (1/AverageMaxStrengthHitsToKill))
+    local damage = math.floor((math.random() * 2 * attackEnergy) * (1 / AverageMaxStrengthHitsToKill))
 
     announce("Attack", player .. " has launched a " .. damage .. " damage attack from " .. x .. "," .. y .. "!")
 
@@ -100,12 +105,13 @@ local function attack(msg)
                 eliminatePlayer(target, player)
             else
                 Players[target].health = newHealth
-                ao.send({Target = target, Action = "Hit", Damage = tostring(damage), Health = tostring(newHealth)})
-                ao.send({Target = player, Action = "Successful-Hit", Recipient = target, Damage = tostring(damage), Health = tostring(newHealth)})
+                ao.send({ Target = target, Action = "Hit", Damage = tostring(damage), Health = tostring(newHealth) })
+                ao.send({ Target = player, Action = "Successful-Hit", Recipient = target, Damage = tostring(damage), Health =
+                tostring(newHealth) })
             end
         end
     end
-    ao.send({Target = player, Action = "Tick"})
+    ao.send({ Target = player, Action = "Tick" })
 end
 
 -- Helper function to check if a target is within range
