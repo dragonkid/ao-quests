@@ -32,11 +32,11 @@ local function situationalAwareness()
 
     -- Check if any player is within range and find the nearest player
     for target, state in pairs(LatestGameState.Players) do
-        if target == ao.id then
+        if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" then
             goto continue
         end
-        if target == "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo" and inRange(player.x, player.y, state.x, state.y, 1) then
-        -- if inRange(player.x, player.y, state.x, state.y, 1) then
+        -- if target == "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo" and inRange(player.x, player.y, state.x, state.y, 1) then
+        if inRange(player.x, player.y, state.x, state.y, 1) then
             targetId = target
             targetInRange = true
             break
@@ -50,7 +50,7 @@ local function situationalAwareness()
         ::continue::
     end
 
-    nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    -- nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
 
     if nearestPlayer ~= nil then
         local targetState = LatestGameState.Players[nearestPlayer]
@@ -89,7 +89,7 @@ local function decideNextAction()
 
     targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
 
-    if player.health < 40 then
+    if player.health < 50 then
         print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
         Send({Target = Game, Action = "Withdraw" })
     end
@@ -118,7 +118,7 @@ local function decideNextAction()
             })
         end
     else
-        print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
+        print("No player in range. Moving towards " .. nearestPlayer .." Direction: " .. towardsDirection)
         ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = towardsDirection })
     end
     InAction = false -- InAction logic added
@@ -205,49 +205,71 @@ Handlers.add(
     end
 )
 
--- Handler to automatically attack when hit by another player.
 Handlers.add(
-    "ReturnAttack",
-    Handlers.utils.hasMatchingTag("Action", "Hit"),
-    function(msg)
-        BeingAttacked = true
-        if not InAction then -- InAction logic added
-            InAction = true -- InAction logic added
-            local playerEnergy = LatestGameState.Players[ao.id].energy
-            if playerEnergy == 0 then
-                print(colors.red .. "Player has insufficient energy." .. colors.reset)
-                ao.send({
-                    Target = Game,
-                    Action = "Attack-Failed",
-                    Reason = "Player has no energy."
-                })
-            elseif playerEnergy < 50 then
-                print(colors.red .. "Returning attack." .. colors.reset)
-                ao.send({
-                    Target = Game,
-                    Action = "PlayerAttack",
-                    Player = ao.id,
-                    AttackEnergy = tostring(playerEnergy)
-                })
-            else
-                print(colors.red .. "Returning attack." .. colors.reset)
-                ao.send({
-                    Target = Game,
-                    Action = "PlayerAttack",
-                    Player = ao.id,
-                    AttackEnergy = tostring(50)
-                })
-            end
-            InAction = false -- InAction logic added
-            ao.send({
-                Target = ao.id,
-                Action = "Tick"
-            })
-        else
-            print("[ReturnAttack]Previous action still in progress. Skipping.")
-        end
+    "OnRemoved",
+    Handlers.utils.hasMatchingTag("Action", "Removed"),
+    function (msg)
+        print(colors.red .. "Removed. Auto re-entrance the game." .. colors.reset)
+        -- ao.send({ Target = Game, Action = "Withdraw" })
+        Send({Target = CRED, Action = "Transfer", Quantity = "1000", Recipient = Game})
+        InAction = false
+        Send({Target = ao.id, Action = "Tick"})
     end
 )
+
+Handlers.add(
+    "TriggerOnPaymentReceived",
+    Handlers.utils.hasMatchingTag("Action", "Payment-Received"),
+    function ()
+        print(colors.red .. "Payment Received." .. colors.reset)
+        InAction = false
+        Send({Target = ao.id, Action = "Tick"})
+    end
+)
+
+-- Handler to automatically attack when hit by another player.
+-- Handlers.add(
+--     "ReturnAttack",
+--     Handlers.utils.hasMatchingTag("Action", "Hit"),
+--     function(msg)
+--         BeingAttacked = true
+--         if not InAction then -- InAction logic added
+--             InAction = true -- InAction logic added
+--             local playerEnergy = LatestGameState.Players[ao.id].energy
+--             if playerEnergy == 0 then
+--                 print(colors.red .. "Player has insufficient energy." .. colors.reset)
+--                 ao.send({
+--                     Target = Game,
+--                     Action = "Attack-Failed",
+--                     Reason = "Player has no energy."
+--                 })
+--             elseif playerEnergy < 50 then
+--                 print(colors.red .. "Returning attack." .. colors.reset)
+--                 ao.send({
+--                     Target = Game,
+--                     Action = "PlayerAttack",
+--                     Player = ao.id,
+--                     AttackEnergy = tostring(playerEnergy)
+--                 })
+--             else
+--                 print(colors.red .. "Returning attack." .. colors.reset)
+--                 ao.send({
+--                     Target = Game,
+--                     Action = "PlayerAttack",
+--                     Player = ao.id,
+--                     AttackEnergy = tostring(50)
+--                 })
+--             end
+--             InAction = false -- InAction logic added
+--             ao.send({
+--                 Target = ao.id,
+--                 Action = "Tick"
+--             })
+--         else
+--             print("[ReturnAttack]Previous action still in progress. Skipping.")
+--         end
+--     end
+-- )
 
 -- Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
 
@@ -257,5 +279,10 @@ Handlers.add(
 
 CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 Game = "MsVWw4JeFHBEHQZxbs1n8JvuqgGsuUUYI8sg40ECJ44"
--- Send({Target = CRED, Action = "Transfer", Quantity = "10", Recipient = Game})
--- Send({Target = ao.id, Action = "Tick"})
+
+
+Send({Target = CRED, Action = "Transfer", Quantity = "1000", Recipient = Game})
+Send({Target = ao.id, Action = "Tick"})
+
+-- Handlers.remove("OnRemoved")
+Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
