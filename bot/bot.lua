@@ -35,8 +35,8 @@ local function situationalAwareness()
         if target == ao.id then
             goto continue
         end
-        -- if target == "QsbQ3ry2Pxgts-3hcONgeB-Jv2Mq9pSs0I3PcIRlf_8" and inRange(player.x, player.y, state.x, state.y, 1) then
-        if inRange(player.x, player.y, state.x, state.y, 1) then
+        if target == "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo" and inRange(player.x, player.y, state.x, state.y, 1) then
+        -- if inRange(player.x, player.y, state.x, state.y, 1) then
             targetId = target
             targetInRange = true
             break
@@ -49,6 +49,8 @@ local function situationalAwareness()
         end
         ::continue::
     end
+
+    nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
 
     if nearestPlayer ~= nil then
         local targetState = LatestGameState.Players[nearestPlayer]
@@ -87,18 +89,25 @@ local function decideNextAction()
 
     targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
 
+    if player.health < 40 then
+        print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
+        Send({Target = Game, Action = "Withdraw" })
+    end
+
     if targetInRange then
-        if player.energy >= 50 then
+        -- if player.energy >= 50 or LatestGameState.Players[target].health <= 10 then
+        if player.energy >= LatestGameState.Players[target].health then
+            BeingAttacked = false
             print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
             ao.send({
                 Target = Game,
                 Action = "PlayerAttack",
                 Player = ao.id,
-                AttackEnergy = tostring(50)
+                AttackEnergy = tostring(player.energy)
             })
         end
 
-        if player.energy < 50 and BeingAttacked then
+        if player.energy < LatestGameState.Players[target].health and BeingAttacked then
             print("Player has insufficient energy(" ..
                 player.energy .. "). Moving away from " .. nearestPlayer .. ". Direction: " .. awayDirection)
             ao.send({
@@ -107,7 +116,6 @@ local function decideNextAction()
                 Player = ao.id,
                 Direction = awayDirection
             })
-            BeingAttacked = false
         end
     else
         print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
@@ -159,10 +167,11 @@ Handlers.add(
         ao.send({ Target = ao.id, Action = "UpdatedGameState" })
         print("Game state updated. Statue:" ..  LatestGameState.GameMode)
         for k, v in pairs(LatestGameState.Players) do
-            print(colors.gray ..
-                "Player: " ..
-                k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. colors
-                .reset)
+            local name = ""
+            if v.name ~= nil then
+                name = v.name
+            end
+            print("Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name)
         end
     end
 )
@@ -184,6 +193,15 @@ Handlers.add(
             Target = ao.id,
             Action = "Tick"
         })
+    end
+)
+
+Handlers.add(
+    "AutoWithdraw",
+    Handlers.utils.hasMatchingTag("Action", "Credit-Notice"),
+    function(msg)
+        print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
+        ao.send({ Target = Game, Action = "Withdraw" })
     end
 )
 
