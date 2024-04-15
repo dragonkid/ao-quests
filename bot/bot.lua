@@ -35,6 +35,7 @@ local function situationalAwareness()
         if target == ao.id then
             goto continue
         end
+        -- if target == "QsbQ3ry2Pxgts-3hcONgeB-Jv2Mq9pSs0I3PcIRlf_8" and inRange(player.x, player.y, state.x, state.y, 1) then
         if inRange(player.x, player.y, state.x, state.y, 1) then
             targetId = target
             targetInRange = true
@@ -87,17 +88,17 @@ local function decideNextAction()
     targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
 
     if targetInRange then
-        if player.energy > 5 then
+        if player.energy >= 50 then
             print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
             ao.send({
                 Target = Game,
                 Action = "PlayerAttack",
                 Player = ao.id,
-                AttackEnergy = tostring(player.energy)
+                AttackEnergy = tostring(50)
             })
         end
 
-        if player.energy <= 5 and BeingAttacked then
+        if player.energy < 50 and BeingAttacked then
             print("Player has insufficient energy(" ..
                 player.energy .. "). Moving away from " .. nearestPlayer .. ". Direction: " .. awayDirection)
             ao.send({
@@ -110,12 +111,7 @@ local function decideNextAction()
         end
     else
         print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
-        ao.send({
-            Target = Game,
-            Action = "PlayerMove",
-            Player = ao.id,
-            Direction = towardsDirection
-        })
+        ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = towardsDirection })
     end
     InAction = false -- InAction logic added
 end
@@ -161,8 +157,7 @@ Handlers.add(
         local json = require("json")
         LatestGameState = json.decode(msg.Data)
         ao.send({ Target = ao.id, Action = "UpdatedGameState" })
-        print("Game state updated. Statue:" ..
-            LatestGameState.GameMode .. ". TimeRemaining:" .. LatestGameState.TimeRemaining)
+        print("Game state updated. Statue:" ..  LatestGameState.GameMode)
         for k, v in pairs(LatestGameState.Players) do
             print(colors.gray ..
                 "Player: " ..
@@ -201,19 +196,20 @@ Handlers.add(
         if not InAction then -- InAction logic added
             InAction = true -- InAction logic added
             local playerEnergy = LatestGameState.Players[ao.id].energy
-            if playerEnergy == undefined then
-                print(colors.red .. "Unable to read energy." .. colors.reset)
-                ao.send({
-                    Target = Game,
-                    Action = "Attack-Failed",
-                    Reason = "Unable to read energy."
-                })
-            elseif playerEnergy == 0 then
+            if playerEnergy == 0 then
                 print(colors.red .. "Player has insufficient energy." .. colors.reset)
                 ao.send({
                     Target = Game,
                     Action = "Attack-Failed",
                     Reason = "Player has no energy."
+                })
+            elseif playerEnergy < 50 then
+                print(colors.red .. "Returning attack." .. colors.reset)
+                ao.send({
+                    Target = Game,
+                    Action = "PlayerAttack",
+                    Player = ao.id,
+                    AttackEnergy = tostring(playerEnergy)
                 })
             else
                 print(colors.red .. "Returning attack." .. colors.reset)
@@ -221,7 +217,7 @@ Handlers.add(
                     Target = Game,
                     Action = "PlayerAttack",
                     Player = ao.id,
-                    AttackEnergy = tostring(playerEnergy)
+                    AttackEnergy = tostring(50)
                 })
             end
             InAction = false -- InAction logic added
@@ -235,8 +231,13 @@ Handlers.add(
     end
 )
 
--- Game = "0rVZYFxvfJpO__EfOz0_PUQ3GFE9kEaES0GkUDNXjvE"
-Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
+-- Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
 
-Send({ Target = Game, Action = "Register" })
+-- Send({ Target = Game, Action = "Register" })
 -- Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
+
+
+CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
+Game = "MsVWw4JeFHBEHQZxbs1n8JvuqgGsuUUYI8sg40ECJ44"
+-- Send({Target = CRED, Action = "Transfer", Quantity = "10", Recipient = Game})
+-- Send({Target = ao.id, Action = "Tick"})
