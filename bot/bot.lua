@@ -32,10 +32,10 @@ local function situationalAwareness()
 
     -- Check if any player is within range and find the nearest player
     for target, state in pairs(LatestGameState.Players) do
-        if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" then
+        if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" or target == "9PVQNAzTG59Wz0LU_RKS3TDU3oQ30NuawOqy1dAZrAI" then
             goto continue
         end
-        -- if target == "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo" and inRange(player.x, player.y, state.x, state.y, 1) then
+        -- if target == "UiqtBPN1-VHYAhMWOCP7mOQ1CRPJS9kt3yHDX05Wodg" and inRange(player.x, player.y, state.x, state.y, 1) then
         if inRange(player.x, player.y, state.x, state.y, 1) then
             targetId = target
             targetInRange = true
@@ -50,7 +50,21 @@ local function situationalAwareness()
         ::continue::
     end
 
-    -- nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    if LatestGameState.Players["YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"] ~= nil then
+        nearestPlayer = "YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"
+    end
+
+    if LatestGameState.Players["o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"] ~= nil then
+        nearestPlayer = "o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"
+    end
+
+    if LatestGameState.Players["PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"] ~= nil then
+        nearestPlayer = "PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"
+    end
+
+    if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
+        nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    end
 
     if nearestPlayer ~= nil then
         local targetState = LatestGameState.Players[nearestPlayer]
@@ -89,8 +103,9 @@ local function decideNextAction()
 
     targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
 
-    if player.health < 50 then
+    if player.health < 60 then
         print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
+
         Send({Target = Game, Action = "Withdraw" })
     end
 
@@ -171,7 +186,11 @@ Handlers.add(
             if v.name ~= nil then
                 name = v.name
             end
-            print("Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name)
+            if k == ao.id then
+                print(colors.green .. "Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name .. colors.reset)
+            else
+                print("Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name)
+            end
         end
     end
 )
@@ -200,7 +219,7 @@ Handlers.add(
     "AutoWithdraw",
     Handlers.utils.hasMatchingTag("Action", "Credit-Notice"),
     function(msg)
-        print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
+        print(colors.red .. "Reward Noticed. Withdrawing." .. colors.reset)
         ao.send({ Target = Game, Action = "Withdraw" })
     end
 )
@@ -281,8 +300,8 @@ CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 Game = "MsVWw4JeFHBEHQZxbs1n8JvuqgGsuUUYI8sg40ECJ44"
 
 
-Send({Target = CRED, Action = "Transfer", Quantity = "1000", Recipient = Game})
+-- Send({Target = CRED, Action = "Transfer", Quantity = "1000", Recipient = Game})
 Send({Target = ao.id, Action = "Tick"})
 
 -- Handlers.remove("OnRemoved")
-Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
+-- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
