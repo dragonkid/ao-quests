@@ -221,6 +221,10 @@ Handlers.add(
     function(msg)
         if LatestGameState.Players[ao.id] ~= nil then
             print(colors.red .. "Reward Noticed. Withdrawing." .. colors.reset)
+            if msg.Tags.Quantity ~= nil then
+                print("Reward: " .. msg.Tags.Quantity)
+                Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
+            end
             ao.send({ Target = Game, Action = "Withdraw" })
         end
     end
@@ -258,48 +262,52 @@ Handlers.add(
 )
 
 -- Handler to automatically attack when hit by another player.
--- Handlers.add(
---     "ReturnAttack",
---     Handlers.utils.hasMatchingTag("Action", "Hit"),
---     function(msg)
---         BeingAttacked = true
---         if not InAction then -- InAction logic added
---             InAction = true -- InAction logic added
---             local playerEnergy = LatestGameState.Players[ao.id].energy
---             if playerEnergy == 0 then
---                 print(colors.red .. "Player has insufficient energy." .. colors.reset)
---                 ao.send({
---                     Target = Game,
---                     Action = "Attack-Failed",
---                     Reason = "Player has no energy."
---                 })
---             elseif playerEnergy < 50 then
---                 print(colors.red .. "Returning attack." .. colors.reset)
---                 ao.send({
---                     Target = Game,
---                     Action = "PlayerAttack",
---                     Player = ao.id,
---                     AttackEnergy = tostring(playerEnergy)
---                 })
---             else
---                 print(colors.red .. "Returning attack." .. colors.reset)
---                 ao.send({
---                     Target = Game,
---                     Action = "PlayerAttack",
---                     Player = ao.id,
---                     AttackEnergy = tostring(50)
---                 })
---             end
---             InAction = false -- InAction logic added
---             ao.send({
---                 Target = ao.id,
---                 Action = "Tick"
---             })
---         else
---             print("[ReturnAttack]Previous action still in progress. Skipping.")
---         end
---     end
--- )
+Handlers.add(
+    "ReturnAttack",
+    Handlers.utils.hasMatchingTag("Action", "Hit"),
+    function(msg)
+        -- BeingAttacked = true
+        -- if not InAction then -- InAction logic added
+        --     InAction = true -- InAction logic added
+        --     local playerEnergy = LatestGameState.Players[ao.id].energy
+        --     if playerEnergy == 0 then
+        --         print(colors.red .. "Player has insufficient energy." .. colors.reset)
+        --         ao.send({
+        --             Target = Game,
+        --             Action = "Attack-Failed",
+        --             Reason = "Player has no energy."
+        --         })
+        --     elseif playerEnergy < 50 then
+        --         print(colors.red .. "Returning attack." .. colors.reset)
+        --         ao.send({
+        --             Target = Game,
+        --             Action = "PlayerAttack",
+        --             Player = ao.id,
+        --             AttackEnergy = tostring(playerEnergy)
+        --         })
+        --     else
+        --         print(colors.red .. "Returning attack." .. colors.reset)
+        --         ao.send({
+        --             Target = Game,
+        --             Action = "PlayerAttack",
+        --             Player = ao.id,
+        --             AttackEnergy = tostring(50)
+        --         })
+        --     end
+        --     InAction = false -- InAction logic added
+        --     ao.send({
+        --         Target = ao.id,
+        --         Action = "Tick"
+        --     })
+        -- else
+        --     print("[ReturnAttack]Previous action still in progress. Skipping.")
+        -- end
+        if LatestGameState.Players[ao.id] ~= nil and LatestGameState.Players[ao.id].health < 55 then
+            print(colors.red .. "Player being attacked. And the health is low. Withdrawing." .. colors.reset)
+            ao.send({ Target = Game, Action = "Withdraw" })
+        end
+    end
+)
 
 CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 Game = "MsVWw4JeFHBEHQZxbs1n8JvuqgGsuUUYI8sg40ECJ44"
