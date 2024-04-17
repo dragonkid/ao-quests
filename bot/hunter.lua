@@ -47,7 +47,7 @@ local function situationalAwareness()
             break
         end
 
-        local distance = calDistance(player.x, player.y, state.x, state.y)
+        local distance = state.health
         if distance < nearestDistance then
             nearestDistance = distance
             nearestPlayer = target
@@ -69,6 +69,11 @@ local function situationalAwareness()
 
     -- if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
     --     nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    -- end
+
+    -- kill dog first
+    -- if LatestGameState.Players["FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"] ~= nil then
+    --     nearestPlayer = "FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"
     -- end
 
     if nearestPlayer ~= nil and LatestGameState.Players[nearestPlayer] ~= nil then
@@ -116,7 +121,7 @@ local function decideNextAction()
 
     if targetInRange then
         -- if player.energy >= 50 or LatestGameState.Players[target].health <= 10 then
-        if player.energy >= LatestGameState.Players[target].health then
+        if player.energy >= LatestGameState.Players[target].health or player.energy >= 30 then
             BeingAttacked = false
             print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
             ao.send({
@@ -228,7 +233,7 @@ Handlers.add(
             print(colors.red .. "Reward Noticed. Withdrawing." .. colors.reset)
             if msg.Tags.Quantity ~= nil then
                 print("Reward: " .. msg.Tags.Quantity)
-                Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
+                -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
             end
             ao.send({ Target = Game, Action = "Withdraw" })
         end
@@ -314,6 +319,12 @@ Handlers.add(
     end
 )
 
+-- Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
+
+-- Send({ Target = Game, Action = "Register" })
+-- Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
+
+
 CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 Game = "s1txsY3xUEA3ejR3n6FqYlslKpdYOMPDbBkzJLz0WwA"
 
@@ -324,5 +335,3 @@ Send({Target = ao.id, Action = "Tick"})
 -- Handlers.remove("OnRemoved")
 -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
 
-
--- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "1872000"})
