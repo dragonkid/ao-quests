@@ -30,21 +30,15 @@ local function situationalAwareness()
     local nearestPlayer = nil
     local nearestDistance = 9999999
 
-    -- Check if any player is within range and find the nearest player
+    -- find the nearest player
     for target, state in pairs(LatestGameState.Players) do
         if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "9PVQNAzTG59Wz0LU_RKS3TDU3oQ30NuawOqy1dAZrAI" or target == "Gm7OVCHwuatogqbVHPpyo926nDMWBB4pIjwSzaSutGQ"
         -- hunters
-        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM"
+        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM" or target == "4CYgWHRj_uvD4eRiUT-p7gr0A5l6plaLMz9YMP7Dn84" or target == "ojfy5Fei_FNkr8hB4PqcKR62uR-NJWW942_oLSrwJaQ"
         -- not used for now
         -- or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" or target == "SfhfYa4Zc4Of4_wr_ECl2p4T5iKMCkUASzXXvrtLNqc" or target == "VRgnwijpip43jn_ZKvZ4UNcHmNlwQaoOs6AgQBo6Obc"
         then
             goto continue
-        end
-        -- if target == "UiqtBPN1-VHYAhMWOCP7mOQ1CRPJS9kt3yHDX05Wodg" and inRange(player.x, player.y, state.x, state.y, 1) then
-        if inRange(player.x, player.y, state.x, state.y, 1) then
-            targetId = target
-            targetInRange = true
-            break
         end
 
         local distance = state.health
@@ -52,29 +46,46 @@ local function situationalAwareness()
             nearestDistance = distance
             nearestPlayer = target
         end
+
+
         ::continue::
     end
 
-    -- if LatestGameState.Players["YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"] ~= nil then
-    --     nearestPlayer = "YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"
-    -- end
+    if LatestGameState.Players["OwobNCCgQaiOb1W37rY6VMpWeZHDIpmGw7mj71-4WvA"] ~= nil then
+        nearestPlayer = "OwobNCCgQaiOb1W37rY6VMpWeZHDIpmGw7mj71-4WvA"
+    end
 
-    -- if LatestGameState.Players["o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"] ~= nil then
-    --     nearestPlayer = "o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"
-    -- end
+    -- BattleBot
+    if LatestGameState.Players["YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"] ~= nil then
+        nearestPlayer = "YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"
+    end
 
-    -- if LatestGameState.Players["PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"] ~= nil then
-    --     nearestPlayer = "PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"
-    -- end
+    if LatestGameState.Players["o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"] ~= nil then
+        nearestPlayer = "o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"
+    end
 
-    -- if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
-    --     nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
-    -- end
+    -- Jonny5
+    if LatestGameState.Players["PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"] ~= nil then
+        nearestPlayer = "PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"
+    end
 
-    -- kill dog first
+    -- Trinity
+    if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
+        nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    end
+
+    -- Doge
     -- if LatestGameState.Players["FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"] ~= nil then
     --     nearestPlayer = "FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"
     -- end
+
+    -- check if player in range
+    -- if target == "UiqtBPN1-VHYAhMWOCP7mOQ1CRPJS9kt3yHDX05Wodg" and inRange(player.x, player.y, state.x, state.y, 1) then
+    if inRange(player.x, player.y, LatestGameState.Players[nearestPlayer].x, LatestGameState.Players[nearestPlayer].y, 1) then
+        targetId = nearestPlayer
+        targetInRange = true
+    end
+
 
     if nearestPlayer ~= nil and LatestGameState.Players[nearestPlayer] ~= nil then
         local targetState = LatestGameState.Players[nearestPlayer]

@@ -34,7 +34,7 @@ local function situationalAwareness()
     for target, state in pairs(LatestGameState.Players) do
         if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "9PVQNAzTG59Wz0LU_RKS3TDU3oQ30NuawOqy1dAZrAI" or target == "Gm7OVCHwuatogqbVHPpyo926nDMWBB4pIjwSzaSutGQ"
         -- hunters
-        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM"
+        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM" or target == "4CYgWHRj_uvD4eRiUT-p7gr0A5l6plaLMz9YMP7Dn84" or target == "ojfy5Fei_FNkr8hB4PqcKR62uR-NJWW942_oLSrwJaQ" or target == "KVRokq28ti04FDa4pkNJbRfGdLjrS9_IAntIabNwbHQ"
         -- not used for now
         -- or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" or target == "SfhfYa4Zc4Of4_wr_ECl2p4T5iKMCkUASzXXvrtLNqc" or target == "VRgnwijpip43jn_ZKvZ4UNcHmNlwQaoOs6AgQBo6Obc"
         then
@@ -116,7 +116,7 @@ local function decideNextAction()
 
     if targetInRange then
         -- if player.energy >= 50 or LatestGameState.Players[target].health <= 10 then
-        if player.energy >= LatestGameState.Players[target].health then
+        if player.energy >= LatestGameState.Players[target].health or player.energy >= 30 then
             BeingAttacked = false
             print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
             ao.send({
