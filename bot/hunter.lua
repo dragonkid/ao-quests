@@ -30,46 +30,62 @@ local function situationalAwareness()
     local nearestPlayer = nil
     local nearestDistance = 9999999
 
-    -- Check if any player is within range and find the nearest player
+    -- find the nearest player
     for target, state in pairs(LatestGameState.Players) do
         if target == ao.id or target == "MrG2U4mRXDpz5608I7Pudw5Zz6LSS_IYS_fmZQZM1TQ" or target == "m0CixFu9onpBuY9SLAYYnZjKdBRaNW69VVz2brLhv-E" or target == "ZwaOeBAbqfhdidT23E9BJSg2mK_2h6zRnMUGlmmIlEQ" or target == "niY2PtRZSi_EGsvZbZiDkg7pDB7xwcVpdaBFlfFPpoc" or target == "9PVQNAzTG59Wz0LU_RKS3TDU3oQ30NuawOqy1dAZrAI" or target == "Gm7OVCHwuatogqbVHPpyo926nDMWBB4pIjwSzaSutGQ"
         -- hunters
-        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM" or target == "4CYgWHRj_uvD4eRiUT-p7gr0A5l6plaLMz9YMP7Dn84" or target == "ojfy5Fei_FNkr8hB4PqcKR62uR-NJWW942_oLSrwJaQ" or target == "KVRokq28ti04FDa4pkNJbRfGdLjrS9_IAntIabNwbHQ"
+        or target == "fFkzFNtJ7CE5XLEoVPEekqnWzw-BM1YjQN4JT3jOdXo" or target == "AUi8dlBtUgwegdDE1LOhjycpFwqEt9y6JM-0nGBUhb4" or target == "7lH97lsCXbG2NbX2ZsVABVfahsEFfDbV6yvLnyJqqN4" or target == "OE0H02LJ_7ZHgQ6McauuYn-gLy6qi8zD7EgvijIMWbo" or target == "QnehEJnJvluzISjc6VTESoiuSgor_mrpRXEUMuG2KLQ" or target == "vRFdG1puKHzB0jHUMMiGvGe0KlDclPQs_LxPO_UUBVM" or target == "4CYgWHRj_uvD4eRiUT-p7gr0A5l6plaLMz9YMP7Dn84" or target == "ojfy5Fei_FNkr8hB4PqcKR62uR-NJWW942_oLSrwJaQ"
         -- not used for now
         -- or target == "_cfCtbkRaVDwbmky8LpB7i4u33La0ukvpkEp8nFaTXE" or target == "SfhfYa4Zc4Of4_wr_ECl2p4T5iKMCkUASzXXvrtLNqc" or target == "VRgnwijpip43jn_ZKvZ4UNcHmNlwQaoOs6AgQBo6Obc"
         then
             goto continue
         end
-        -- if target == "UiqtBPN1-VHYAhMWOCP7mOQ1CRPJS9kt3yHDX05Wodg" and inRange(player.x, player.y, state.x, state.y, 1) then
-        if inRange(player.x, player.y, state.x, state.y, 1) then
-            targetId = target
-            targetInRange = true
-            break
-        end
 
-        local distance = calDistance(player.x, player.y, state.x, state.y)
+        local distance = state.health
         if distance < nearestDistance then
             nearestDistance = distance
             nearestPlayer = target
         end
+
+
         ::continue::
     end
 
-    -- if LatestGameState.Players["YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"] ~= nil then
-    --     nearestPlayer = "YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"
+    if LatestGameState.Players["OwobNCCgQaiOb1W37rY6VMpWeZHDIpmGw7mj71-4WvA"] ~= nil then
+        nearestPlayer = "OwobNCCgQaiOb1W37rY6VMpWeZHDIpmGw7mj71-4WvA"
+    end
+
+    -- BattleBot
+    if LatestGameState.Players["YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"] ~= nil then
+        nearestPlayer = "YIIAgYMedkwm84WDL61GeTBJVvPsdWrZnqtE-slJvrw"
+    end
+
+    if LatestGameState.Players["o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"] ~= nil then
+        nearestPlayer = "o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"
+    end
+
+    -- Jonny5
+    if LatestGameState.Players["PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"] ~= nil then
+        nearestPlayer = "PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"
+    end
+
+    -- Trinity
+    if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
+        nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
+    end
+
+    -- Doge
+    -- if LatestGameState.Players["FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"] ~= nil then
+    --     nearestPlayer = "FD5Lava4E0eG6mOFWEQ-epiwScEG1vrFP5uP6In7wXQ"
     -- end
 
-    -- if LatestGameState.Players["o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"] ~= nil then
-    --     nearestPlayer = "o7ojWM_2GCpjEq9LbQpNt98rK0yYR5sttDbXn_m7jgA"
-    -- end
+    -- check if player in range
+    -- if target == "UiqtBPN1-VHYAhMWOCP7mOQ1CRPJS9kt3yHDX05Wodg" and inRange(player.x, player.y, state.x, state.y, 1) then
+    if inRange(player.x, player.y, LatestGameState.Players[nearestPlayer].x, LatestGameState.Players[nearestPlayer].y, 1) then
+        targetId = nearestPlayer
+        targetInRange = true
+    end
 
-    -- if LatestGameState.Players["PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"] ~= nil then
-    --     nearestPlayer = "PX6KWOIMVwYOSrxGd54QrkvjOzdKb2M2LAu1O5IqeDM"
-    -- end
-
-    -- if LatestGameState.Players["ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"] ~= nil then
-    --     nearestPlayer = "ET1HkDJVwGp9nDDyAeDkCOm7nU4ymi4vkmLS3rdSsXo"
-    -- end
 
     if nearestPlayer ~= nil and LatestGameState.Players[nearestPlayer] ~= nil then
         local targetState = LatestGameState.Players[nearestPlayer]
@@ -228,7 +244,7 @@ Handlers.add(
             print(colors.red .. "Reward Noticed. Withdrawing." .. colors.reset)
             if msg.Tags.Quantity ~= nil then
                 print("Reward: " .. msg.Tags.Quantity)
-                Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
+                -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
             end
             ao.send({ Target = Game, Action = "Withdraw" })
         end
@@ -314,6 +330,12 @@ Handlers.add(
     end
 )
 
+-- Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
+
+-- Send({ Target = Game, Action = "Register" })
+-- Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
+
+
 CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 Game = "s1txsY3xUEA3ejR3n6FqYlslKpdYOMPDbBkzJLz0WwA"
 
@@ -324,5 +346,3 @@ Send({Target = ao.id, Action = "Tick"})
 -- Handlers.remove("OnRemoved")
 -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
 
-
--- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "1872000"})

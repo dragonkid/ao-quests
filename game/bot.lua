@@ -1,7 +1,15 @@
 -- Initializing global variables to store the latest game state and game host process.
 LatestGameState = LatestGameState or {}
+Airdrop = Airdrop or nil
 InAction = false -- Prevents the agent from taking multiple actions at once.
 BeingAttacked = false
+AttackEnergy = 10
+Range = 1
+
+HealingDraught = "Healing Draught"
+EnergyPhial = "Energy Phial"
+VistaLens = "Vista Lens" -- increased range to 3
+PowerGem = "Power Gem" -- double damage
 
 local colors = {
     red = "\27[31m",
@@ -20,39 +28,15 @@ local function calDistance(x1, y1, x2, y2)
     return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
 end
 
-local function situationalAwareness()
+local function getDirection(targetPos)
     local player = LatestGameState.Players[ao.id]
 
-    local targetId = nil
-    local targetInRange = false
     local awayDirection = ""
     local towardsDirection = ""
-    local nearestPlayer = nil
-    local nearestDistance = 9999999
 
-    -- Check if any player is within range and find the nearest player
-    for target, state in pairs(LatestGameState.Players) do
-        if target == ao.id then
-            goto continue
-        end
-        if inRange(player.x, player.y, state.x, state.y, 1) then
-            targetId = target
-            targetInRange = true
-            break
-        end
-
-        local distance = calDistance(player.x, player.y, state.x, state.y)
-        if distance < nearestDistance then
-            nearestDistance = distance
-            nearestPlayer = target
-        end
-        ::continue::
-    end
-
-    if nearestPlayer ~= nil then
-        local targetState = LatestGameState.Players[nearestPlayer]
-        local dx = targetState.x - player.x
-        local dy = targetState.y - player.y
+    if targetPos ~= nil then
+        local dx = targetPos.x - player.x
+        local dy = targetPos.y - player.y
 
         if dy > 0 then
             towardsDirection = towardsDirection .. "Down"
@@ -71,69 +55,116 @@ local function situationalAwareness()
         end
     end
 
-    return targetInRange, targetId, awayDirection, towardsDirection, nearestPlayer
+    return towardsDirection, awayDirection
+end
+
+local function getTargetPos()
+    local player = LatestGameState.Players[ao.id]
+    if Airdrop ~= nil then
+        if Airdrop.type == VistaLens or Airdrop.type == PowerGem then
+            return { x = Airdrop.x, y = Airdrop.y }, "Airdrop"
+        end
+
+        if Airdrop.type == HealingDraught and player.health < 50 then
+            return { x = Airdrop.x, y = Airdrop.y }, "Airdrop"
+        end
+
+        if Airdrop.type == EnergyPhial and player.energy < 20 then
+            return { x = Airdrop.x, y = Airdrop.y }, "Airdrop"
+        end
+    end
+
+    local nearestPlayer = nil
+    local nearestDistance = 9999999
+    local players = LatestGameState.Players
+    for target, state in pairs(players) do
+        if target == ao.id then
+            goto continue
+        end
+
+        local distance = calDistance(player.x, player.y, state.x, state.y)
+        if distance < nearestDistance then
+            nearestDistance = distance
+            nearestPlayer = target
+        end
+        ::continue::
+    end
+
+    return players[nearestPlayer], "Player"
+end
+
+local function situationalAwareness()
+    local player = LatestGameState.Players[ao.id]
+
+    local direction = ""
+
+    local action = "DoNothing"
+
+    local targetPos, targetType = getTargetPos()
+    local towardsDirection, awayDirection = getDirection(targetPos)
+
+    if targetType == "Airdrop" then
+        print("Moving towards airdrop " .. targetPos .. ". Direction: " .. towardsDirection)
+        return "Move", towardsDirection
+    end
+
+    if inRange(player.x, player.y, targetPos.x, targetPos.y, Range) then
+        if player.energy < AttackEnergy and BeingAttacked then
+            print("Player being attacked and has insufficient energy(" ..  player.energy .. "). Moving away from " .. targetPos .. ". Direction: " .. awayDirection)
+            action = "Move"
+            direction = awayDirection
+        end
+
+        if player.energy >= AttackEnergy then
+            print(colors.red .. "Player " .. targetPos .. " in range. Attacking." .. colors.reset)
+            action = "Attack"
+        end
+    else
+        print("No player in range. Moving towards " .. targetPos .. ". Direction: " .. towardsDirection)
+        action = "Move"
+        direction = towardsDirection
+    end
+
+    return action, direction
 end
 
 -- Decides the next action based on player proximity and energy.
 -- If any player is within range, it initiates an attack; otherwise, moves randomly.
 local function decideNextAction()
-    local targetInRange = false
-    local target = nil
-    local awayDirection = nil
-    local towardsDirection = nil
-    local nearestPlayer = nil
-    local player = LatestGameState.Players[ao.id]
+    local action, direction = situationalAwareness()
 
-    targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
-
-    if targetInRange then
-        if player.energy > 5 then
-            print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
-            ao.send({
-                Target = Game,
-                Action = "PlayerAttack",
-                Player = ao.id,
-                AttackEnergy = tostring(player.energy)
-            })
-        end
-
-        if player.energy <= 5 and BeingAttacked then
-            print("Player has insufficient energy(" ..
-                player.energy .. "). Moving away from " .. nearestPlayer .. ". Direction: " .. awayDirection)
-            ao.send({
-                Target = Game,
-                Action = "PlayerMove",
-                Player = ao.id,
-                Direction = awayDirection
-            })
-            BeingAttacked = false
-        end
-    else
-        print("No player in range. Moving towards " .. nearestPlayer ..". Direction: " .. towardsDirection)
+    if action == "Attack" then
+        ao.send({
+            Target = Game,
+            Action = "PlayerAttack",
+            Player = ao.id,
+            AttackEnergy = tostring(10)
+        })
+    elseif action == "Move" then
         ao.send({
             Target = Game,
             Action = "PlayerMove",
             Player = ao.id,
-            Direction = towardsDirection
+            Direction = direction
         })
+    else
+        print("No action to take.")
     end
     InAction = false -- InAction logic added
 end
 
 -- Handler to print game announcements and trigger game state updates.
 Handlers.add("PrintAnnouncements", Handlers.utils.hasMatchingTag("Action", "Announcement"), function(msg)
+    print(colors.green .. msg.Event .. ": " .. msg.Data .. colors.reset)
     if msg.Event == "Started-Waiting-Period" then
-        ao.send({
-            Target = ao.id,
-            Action = "AutoPay"
-        })
+        print("Auto-paying confirmation fees.")
+        ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
     elseif (msg.Event == "Tick" or msg.Event == "Started-Game") and not InAction then
         InAction = true -- InAction logic added
         ao.send({ Target = Game, Action = "GetGameState" })
     elseif InAction then -- InAction logic added
         print("[PrintAnnouncements]Previous action still in progress. Skipping.")
     end
-    print(colors.green .. msg.Event .. ": " .. msg.Data .. colors.reset)
 end)
 
 -- Handler to trigger game state updates.
@@ -145,12 +176,6 @@ Handlers.add("GetGameStateOnTick", Handlers.utils.hasMatchingTag("Action", "Tick
     else
         print("[GetGameStateOnTick]Previous action still in progress. Skipping.")
     end
-end)
-
--- Handler to automate payment confirmation when waiting period starts.
-Handlers.add("AutoPay", Handlers.utils.hasMatchingTag("Action", "AutoPay"), function(msg)
-    print("Auto-paying confirmation fees.")
-    ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
 end)
 
 -- Handler to update the game state upon receiving game state information.
@@ -201,19 +226,20 @@ Handlers.add(
         if not InAction then -- InAction logic added
             InAction = true -- InAction logic added
             local playerEnergy = LatestGameState.Players[ao.id].energy
-            if playerEnergy == undefined then
-                print(colors.red .. "Unable to read energy." .. colors.reset)
-                ao.send({
-                    Target = Game,
-                    Action = "Attack-Failed",
-                    Reason = "Unable to read energy."
-                })
-            elseif playerEnergy == 0 then
+            if playerEnergy == 0 then
                 print(colors.red .. "Player has insufficient energy." .. colors.reset)
                 ao.send({
                     Target = Game,
                     Action = "Attack-Failed",
                     Reason = "Player has no energy."
+                })
+            elseif playerEnergy < 10 then
+                print(colors.red .. "Returning attack." .. colors.reset)
+                ao.send({
+                    Target = Game,
+                    Action = "PlayerAttack",
+                    Player = ao.id,
+                    AttackEnergy = tostring(playerEnergy)
                 })
             else
                 print(colors.red .. "Returning attack." .. colors.reset)
@@ -221,7 +247,7 @@ Handlers.add(
                     Target = Game,
                     Action = "PlayerAttack",
                     Player = ao.id,
-                    AttackEnergy = tostring(playerEnergy)
+                    AttackEnergy = tostring(10)
                 })
             end
             InAction = false -- InAction logic added
@@ -235,8 +261,32 @@ Handlers.add(
     end
 )
 
--- Game = "0rVZYFxvfJpO__EfOz0_PUQ3GFE9kEaES0GkUDNXjvE"
-Game = "bmgDDTk5sJk7ohDidto3Vmm-ur2BopjJtmX0mVYF-ig"
+Handlers.add(
+    "UpdateAirdrop",
+    Handlers.utils.hasMatchingTag("Action", "Airdrop"),
+    function(msg)
+        Range = 1
+        local json = require("json")
+        Airdrop = json.decode(msg.Data)
+        print("Airdrop updated. X:" .. Airdrop.x .. " Y:" .. Airdrop.y .. " Type:" .. Airdrop.type)
+    end
+)
 
+Handlers.add(
+    "AirdropPicked",
+    Handlers.utils.hasMatchingTag("Action", "Airdrop-Picked"),
+    function (msg)
+        Airdrop = nil
+        local json = require("json")
+        local data = json.decode(msg.Data)
+        print("Player " .. data.player .. " picked up " .. data.type)
+
+        if data.type == VistaLens and data.player == ao.id then
+            Range = 3
+        end
+    end
+)
+
+
+Game = "xqd2fD8u7LPnX-gio0ztbPjlveOKGsRer_366qXcNcE"
 Send({ Target = Game, Action = "Register" })
--- Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
