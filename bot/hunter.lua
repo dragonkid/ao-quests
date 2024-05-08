@@ -2,6 +2,7 @@
 LatestGameState = LatestGameState or {}
 InAction = false -- Prevents the agent from taking multiple actions at once.
 BeingAttacked = false
+Target = nil
 
 local colors = {
     red = "\27[31m",
@@ -28,6 +29,7 @@ local function situationalAwareness()
     local awayDirection = ""
     local towardsDirection = ""
     local nearestPlayer = nil
+    local moveSteps = nil
     local nearestDistance = 9999999
 
     -- find the nearest player
@@ -107,9 +109,19 @@ local function situationalAwareness()
             towardsDirection = towardsDirection .. "Left"
             awayDirection = towardsDirection .. "Right"
         end
+
+        if dx == 0 then
+            moveSteps = math.abs(dy) - 1
+        elseif dy == 0 then
+            moveSteps = math.abs(dx) - 1
+        else
+            moveSteps = math.min(math.abs(dx), math.abs(dy))
+        end
     end
 
-    return targetInRange, targetId, awayDirection, towardsDirection, nearestPlayer
+    Target = nearestPlayer
+
+    return targetInRange, targetId, awayDirection, towardsDirection, nearestPlayer, moveSteps
 end
 
 -- Decides the next action based on player proximity and energy.
@@ -120,9 +132,10 @@ local function decideNextAction()
     local awayDirection = nil
     local towardsDirection = nil
     local nearestPlayer = nil
+    local moveSteps = nil
     local player = LatestGameState.Players[ao.id]
 
-    targetInRange, target, awayDirection, towardsDirection, nearestPlayer = situationalAwareness()
+    targetInRange, target, awayDirection, towardsDirection, nearestPlayer, moveSteps = situationalAwareness()
 
     if player.health < 55 then
         print(colors.red .. "Player health is low. Withdrawing." .. colors.reset)
@@ -135,7 +148,7 @@ local function decideNextAction()
         if player.energy >= LatestGameState.Players[target].health or player.energy >= 30 then
             BeingAttacked = false
             print(colors.red .. "Player " .. target .. " in range. Attacking." .. colors.reset)
-            ao.send({
+            Send({
                 Target = Game,
                 Action = "PlayerAttack",
                 Player = ao.id,
@@ -154,8 +167,10 @@ local function decideNextAction()
         --     })
         -- end
     else
-        print("No player in range. Moving towards " .. nearestPlayer .." Direction: " .. towardsDirection)
-        ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = towardsDirection })
+        print("No player in range. Moving towards " .. nearestPlayer .." Direction: " .. towardsDirection .. " Steps: " .. moveSteps)
+        for _ = 1, moveSteps do
+            Send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = towardsDirection })
+        end
     end
     InAction = false -- InAction logic added
 end
@@ -163,13 +178,10 @@ end
 -- Handler to print game announcements and trigger game state updates.
 Handlers.add("PrintAnnouncements", Handlers.utils.hasMatchingTag("Action", "Announcement"), function(msg)
     if msg.Event == "Started-Waiting-Period" then
-        ao.send({
-            Target = ao.id,
-            Action = "AutoPay"
-        })
+        Send({ Target = ao.id, Action = "AutoPay" })
     elseif (msg.Event == "Tick" or msg.Event == "Started-Game") and not InAction then
         InAction = true -- InAction logic added
-        ao.send({ Target = Game, Action = "GetGameState" })
+        Send({ Target = Game, Action = "GetGameState" })
     elseif InAction then -- InAction logic added
         print("[PrintAnnouncements]Previous action still in progress. Skipping.")
     end
@@ -181,7 +193,7 @@ Handlers.add("GetGameStateOnTick", Handlers.utils.hasMatchingTag("Action", "Tick
     if not InAction then -- InAction logic added
         InAction = true  -- InAction logic added
         print(colors.gray .. "Getting game state..." .. colors.reset)
-        ao.send({ Target = Game, Action = "GetGameState" })
+        Send({ Target = Game, Action = "GetGameState" })
     else
         print("[GetGameStateOnTick]Previous action still in progress. Skipping.")
     end
@@ -190,7 +202,7 @@ end)
 -- Handler to automate payment confirmation when waiting period starts.
 Handlers.add("AutoPay", Handlers.utils.hasMatchingTag("Action", "AutoPay"), function(msg)
     print("Auto-paying confirmation fees.")
-    ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
+    Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
 end)
 
 -- Handler to update the game state upon receiving game state information.
@@ -200,7 +212,7 @@ Handlers.add(
     function(msg)
         local json = require("json")
         LatestGameState = json.decode(msg.Data)
-        ao.send({ Target = ao.id, Action = "UpdatedGameState" })
+        Send({ Target = ao.id, Action = "UpdatedGameState" })
         print("Game state updated. Statue:" ..  LatestGameState.GameMode)
         for k, v in pairs(LatestGameState.Players) do
             local name = ""
@@ -209,6 +221,8 @@ Handlers.add(
             end
             if k == ao.id then
                 print(colors.green .. "Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name .. colors.reset)
+            elseif k == Target then
+                print(colors.red .. "Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name .. colors.reset)
             else
                 print("Player: " ..  k .. " Energy: " .. v.energy .. " Health: " .. v.health .. " X: " .. v.x .. " Y: " .. v.y .. " Name: " .. name)
             end
@@ -229,10 +243,7 @@ Handlers.add(
         end
         print("Deciding next action.")
         decideNextAction()
-        ao.send({
-            Target = ao.id,
-            Action = "Tick"
-        })
+        Send({ Target = ao.id, Action = "Tick" })
     end
 )
 
@@ -246,7 +257,7 @@ Handlers.add(
                 print("Reward: " .. msg.Tags.Quantity)
                 -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = msg.Tags.Quantity})
             end
-            ao.send({ Target = Game, Action = "Withdraw" })
+            Send({ Target = Game, Action = "Withdraw" })
         end
     end
 )
@@ -268,7 +279,7 @@ Handlers.add(
     Handlers.utils.hasMatchingTag("Action", "Eliminated"),
     function (msg)
         print(colors.red .. "Eliminated. Auto re-entrance the game." .. colors.reset)
-        ao.send({ Target = Game, Action = "Withdraw" })
+        Send({ Target = Game, Action = "Withdraw" })
     end
 )
 
@@ -325,7 +336,7 @@ Handlers.add(
         -- end
         if LatestGameState.Players[ao.id] ~= nil and LatestGameState.Players[ao.id].health < 55 then
             print(colors.red .. "Player being attacked. And the health is low. Withdrawing." .. colors.reset)
-            ao.send({ Target = Game, Action = "Withdraw" })
+            Send({ Target = Game, Action = "Withdraw" })
         end
     end
 )
@@ -337,11 +348,13 @@ Handlers.add(
 
 
 CRED = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
-Game = "s1txsY3xUEA3ejR3n6FqYlslKpdYOMPDbBkzJLz0WwA"
+-- Game = "-vsAs0-3xQw6QUAYbUuonTbXAnFNJtzqhriKKOymQ9w"
+-- Game = "ERRyYc0K3XurSBjpiTceT7Cg9acJaz-bES6w8SXhk-M"
 
 
 -- Send({Target = CRED, Action = "Transfer", Quantity = "1000", Recipient = Game})
-Send({Target = ao.id, Action = "Tick"})
+-- Send({Target = ao.id, Action = "Tick"})
+-- Send({Target = Game, Action = "Withdraw" })
 
 -- Handlers.remove("OnRemoved")
 -- Send({ Target = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc", Action = "Transfer", Recipient = "--VDOfP6JI-JmfPlPP0yGcNrekFdAwE-1QCKaoI2Tfw", Quantity = "10000"})
