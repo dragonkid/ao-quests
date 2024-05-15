@@ -104,7 +104,7 @@ local function situationalAwareness()
     local towardsDirection, awayDirection = getDirection(targetPos)
 
     if targetType == "Airdrop" then
-        print("Moving towards airdrop " .. targetPos .. ". Direction: " .. towardsDirection)
+        print("Moving towards airdrop. Direction: " .. towardsDirection)
         return "Move", towardsDirection
     end
 
@@ -116,11 +116,11 @@ local function situationalAwareness()
         end
 
         if player.energy >= AttackEnergy then
-            print(colors.red .. "Player " .. targetPos .. " in range. Attacking." .. colors.reset)
+            print(colors.red .. "Player in range. Attacking." .. colors.reset)
             action = "Attack"
         end
     else
-        print("No player in range. Moving towards " .. targetPos .. ". Direction: " .. towardsDirection)
+        print("No player in range. Moving towards airdrop. Direction: " .. towardsDirection)
         action = "Move"
         direction = towardsDirection
     end
@@ -158,7 +158,7 @@ Handlers.add("PrintAnnouncements", Handlers.utils.hasMatchingTag("Action", "Anno
     print(colors.green .. msg.Event .. ": " .. msg.Data .. colors.reset)
     if msg.Event == "Started-Waiting-Period" then
         print("Auto-paying confirmation fees.")
-        ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
+        Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
     elseif (msg.Event == "Tick" or msg.Event == "Started-Game") and not InAction then
         InAction = true -- InAction logic added
         ao.send({ Target = Game, Action = "GetGameState" })
@@ -288,5 +288,7 @@ Handlers.add(
 )
 
 
-Game = "xqd2fD8u7LPnX-gio0ztbPjlveOKGsRer_366qXcNcE"
+Game = "Kd7kqNEt5gV_6b59mqUSTXhwfsT3Et08rnA-iIiAO5k"
 Send({ Target = Game, Action = "Register" })
+Send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
+Send({Target = ao.id, Action = "Tick"})

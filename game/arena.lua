@@ -33,7 +33,7 @@ StateChangeTime = StateChangeTime or undefined
 -- State durations (in milliseconds)
 WaitTime = WaitTime or 2 * 60 * 1000 -- 2 minutes
 GameTime = GameTime or 20 * 60 * 1000 -- 20 minutes
-Now = Now or undefined -- Current time, updated on every message.
+Now = Now or nil -- Current time, updated on every message.
 
 -- Token information for player stakes.
 UNIT = 1000
@@ -219,12 +219,17 @@ Handlers.add(
     function(Msg)
         Now = Msg.Timestamp
         if GameMode == "Not-Started" then
+            print("game not started...")
             startWaitingPeriod()
         elseif GameMode == "Waiting" then
+            print("game waiting...")
             if Now > StateChangeTime then
                 startGamePeriod()
+            else
+                print("It is not time to start the game yet." .. " Time remaining: " .. (StateChangeTime - Now) .. "ms.")
             end
         elseif GameMode == "Playing" then
+            print("game playing...")
             if onTick and type(onTick) == "function" then
               onTick()
             end
@@ -238,19 +243,20 @@ Handlers.add(
 -- Handler for player deposits to participate in the next game.
 Handlers.add(
     "Transfer",
+    -- function(Msg)
+    --     return
+    --         Msg.Action == "Credit-Notice" and
+    --         Msg.From == PaymentToken and
+    --         tonumber(Msg.Quantity) >= tonumber(PaymentQty) and "continue"
+    -- end,
+    Handlers.utils.hasMatchingTag("Action", "Transfer"),
     function(Msg)
-        return
-            Msg.Action == "Credit-Notice" and
-            Msg.From == PaymentToken and
-            tonumber(Msg.Quantity) >= tonumber(PaymentQty) and "continue"
-    end,
-    function(Msg)
-        Waiting[Msg.Sender] = true
+        Waiting[Msg.From] = true
         ao.send({
-            Target = Msg.Sender,
+            Target = Msg.From,
             Action = "Payment-Received"
         })
-        announce("Player-Ready", Msg.Sender .. " is ready to play!")
+        announce("Player-Ready", Msg.From .. " is ready to play!")
     end
 )
 

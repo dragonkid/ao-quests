@@ -12,6 +12,9 @@ EnergyPerSec = 1 -- Energy gained per second
 -- Attack settings
 AverageMaxStrengthHitsToKill = 3 -- Average number of hits to eliminate a player
 
+-- Airdrop
+LastAirdrop = nil
+AirdropInterval = 60000 -- 1 minute
 -- Airdrop types
 HealingDraught = "Healing Draught"
 EnergyPhial = "Energy Phial"
@@ -21,10 +24,10 @@ AirdropTypes = { HealingDraught, EnergyPhial, VistaLens, PowerGem }
 
 Airdrop = nil
 
-GameMode = "Not-Started"
-Players = {}
-Waiting = {}
-Listeners = {}
+-- GameMode = "Not-Started"
+-- Players = {}
+-- Waiting = {}
+-- Listeners = {}
 -- PaymentToken = "Sa0iBLPNyJQrwpTTG-tWLQU-1QeUAJA73DdxGGiKoJc"
 
 -- Initializes default player state
@@ -39,12 +42,43 @@ function playerInitState()
     }
 end
 
+function resetPlayerWithWeapon()
+   for player, state in pairs(Players) do
+        if state.weapon then
+            state.weapon = nil
+        end
+    end
+end
+
+
+local function airdrop()
+    resetPlayerWithWeapon()
+    local json = require("json")
+
+    local x = math.random(0, Width)
+    local y = math.random(0, Height)
+    local airdropType = AirdropTypes[math.random(1, #AirdropTypes)]
+
+    Airdrop = { x = x, y = y, type = airdropType }
+    print("Airdrop: " .. x .. "," .. y .. " Type: " .. airdropType)
+
+    for player, _ in pairs(Players) do
+        ao.send({ Target = player, Action = "Airdrop", Data = json.encode(Airdrop)})
+    end
+end
+
+
 -- Function to incrementally increase player's energy
 -- Called periodically to update player energy
 function onTick()
     if GameMode ~= "Playing" then return end -- Only active during "Playing" state
 
-    if LastTick == undefined then LastTick = Now end
+    if LastAirdrop == nil or Now - LastAirdrop >= AirdropInterval then
+        LastAirdrop = Now
+        airdrop()
+    end
+
+    if LastTick == nil then LastTick = Now end
 
     local Elapsed = Now - LastTick
     if Elapsed >= 1000 then -- Actions performed every second
@@ -178,39 +212,3 @@ Handlers.prepend("RequestTokens",
     Handlers.utils.hasMatchingTag("Action", "RequestTokens"),
     Handlers.utils.reply("Sorry, this game does not give out tokens you must use $CRED")
 )
-
-local function airdrop()
-    local json = require("json")
-
-    local x = math.random(0, Width)
-    local y = math.random(0, Height)
-    local airdropType = AirdropTypes[math.random(1, #AirdropTypes)]
-
-    Airdrop = { x = x, y = y, type = airdropType }
-    print("Airdrop: " .. x .. "," .. y .. " Type: " .. airdropType)
-
-    for player, _ in pairs(Players) do
-        ao.send({ Target = player, Action = "Airdrop", Data = json.encode(Airdrop)})
-    end
-end
-
-local function resetPlayerWithWeapon()
-   for player, state in pairs(Players) do
-        if state.weapon then
-            state.weapon = nil
-        end
-    end
-end
-
--- Handlers.add(
---     "CronTick",
---     Handlers.utils.hasMatchingTag("Action", "Cron"),
---     function()
---         if GameMode ~= "Playing" then
---             print("Game not in playing state. Skipping.")
---             return
---         end -- Only active during "Playing" state
---         resetPlayerWithWeapon()
---         airdrop()
---     end
--- )
